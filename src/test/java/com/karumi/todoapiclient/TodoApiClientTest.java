@@ -16,6 +16,10 @@
 package com.karumi.todoapiclient;
 
 import com.karumi.todoapiclient.dto.TaskDto;
+import com.karumi.todoapiclient.exception.TodoApiClientException;
+import com.karumi.todoapiclient.exception.ItemNotFoundException;
+import com.karumi.todoapiclient.exception.UnknownErrorException;
+
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,45 +27,76 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.io.IOException;
+import com.karumi.todoapiclient.exception.NetworkErrorException;
+
 public class TodoApiClientTest extends MockWebServerTest {
 
   private TodoApiClient apiClient;
 
-  @Before public void setUp() throws Exception {
+  @Before
+  public void setUp() throws Exception {
     super.setUp();
     String mockWebServerEndpoint = getBaseEndpoint();
     apiClient = new TodoApiClient(mockWebServerEndpoint);
   }
 
-  @Test public void sendsAcceptAndContentTypeHeaders() throws Exception {
-    enqueueMockResponse();
+  @Test
+  public void getTaskListAndCheckTheFirst() throws Exception{
 
-    apiClient.getAllTasks();
+      enqueueMockResponse(200, "getTasksResponse.json");
 
-    assertRequestContainsHeader("Accept", "application/json");
+      List<TaskDto> tasks = apiClient.getAllTasks();
+
+      assertEquals(200, tasks.size());
+      assertTaskContainsExpectedValues(tasks.get(1));
+
   }
 
-  @Test public void sendsGetAllTaskRequestToTheCorrectEndpoint() throws Exception {
-    enqueueMockResponse();
+  @Test
+  public void requestSentCorrectVerbToCorrectPath() throws Exception{
 
-    apiClient.getAllTasks();
-
-    assertGetRequestSentTo("/todos");
+      enqueueMockResponse();
+      apiClient.getAllTasks();
+      assertGetRequestSentTo("/todos");
   }
 
-  @Test public void parsesTasksProperlyGettingAllTheTasks() throws Exception {
-    enqueueMockResponse(200, "getTasksResponse.json");
+  @Test (expected = TodoApiClientException.class)
+  public void serverReturnsError418() throws Exception{
+      enqueueMockResponse(418);
+      apiClient.getAllTasks();
+  }
 
-    List<TaskDto> tasks = apiClient.getAllTasks();
+  @Test
+  public void requestGetOneTaskToCorrectPathWithCorrectVerb() throws Exception{
 
-    assertEquals(tasks.size(), 200);
-    assertTaskContainsExpectedValues(tasks.get(0));
+    String task = "45";
+    enqueueMockResponse();
+    apiClient.getTaskById(task);
+    assertGetRequestSentTo("/todos/"+task);
+  }
+
+  @Test (expected = ItemNotFoundException.class)
+  public void requestAnNonExistingItemServerReturns404() throws Exception {
+
+    enqueueMockResponse(404);
+    TaskDto task = apiClient.getTaskById("1000");
+  }
+
+  @Test (expected = UnknownErrorException.class)
+  public void requestAndServerReturns500() throws Exception {
+
+    enqueueMockResponse(500);
+    TaskDto task = apiClient.getTaskById("1000");
   }
 
   private void assertTaskContainsExpectedValues(TaskDto task) {
-    assertEquals(task.getId(), "1");
+    assertEquals(task.getId(), "2");
     assertEquals(task.getUserId(), "1");
-    assertEquals(task.getTitle(), "delectus aut autem");
+    assertEquals(task.getTitle(), "quis ut nam facilis et officia qui");
     assertFalse(task.isFinished());
   }
+
 }
+
+
