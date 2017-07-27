@@ -1,4 +1,4 @@
-![Karumi logo][karumilogo] KataTODOApiClient for Java. [![Build Status](https://travis-ci.org/Karumi/KataTODOApiClientJava.svg?branch=master)](https://travis-ci.org/Karumi/KataTODOApiClientJava)
+ ![Karumi logo][karumilogo] KataTODOApiClient for Java. [![Build Status](https://travis-ci.org/Karumi/KataTODOApiClientJava.svg?branch=master)](https://travis-ci.org/Karumi/KataTODOApiClientJava)
 ============================
 
 - We are here to practice integration testsing using HTTP stubbing. 
